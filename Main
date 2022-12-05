@@ -1,0 +1,102 @@
+from __future__ import annotations
+from abc import ABC, abstractmethod
+from random import randrange
+from typing import List
+
+
+class Subject(ABC): #interfaz
+    @abstractmethod
+    def registerObserver(self, observer: Observer) -> None:#Registrar observador
+        pass
+
+    @abstractmethod
+    def removeObserver(self, observer: Observer) -> None:#Eliminar observador
+        pass
+
+    @abstractmethod
+    def notifyObservers(self) -> None:#Notificar Observador
+        pass
+
+
+class Observer(ABC): #interfaz
+    @abstractmethod
+    def update(self, subject: Subject) -> None: #metodo actualizar
+        pass
+
+
+class ConcreteSubject(Subject):
+    _state: int = None
+    _observers: List[Observer] = []
+
+    def registerObserver(self, observer: Observer) -> None:
+        print("Subject: añadiendo objervador.")
+        self._observers.append(observer)
+
+    def removeObserver(self, observer: Observer) -> None:
+        self._observers.remove(observer)
+
+    def notifyObservers(self) -> None:
+        print("subject: Notificando observadores...")
+        for observer in self._observers:
+            observer.update(self)
+
+    def temperatureChanged(self) -> None: #simula un cambio en nuestra temperatura
+        self._state = randrange(0, 35)
+
+        print(f"Subject: Mi estado acabó de cambiar a: {self._state}" + "°C")
+        self.notifyObservers()
+
+    def getTemperature(self):#Permite el acceso de observadores a la temperatura
+        return self._state
+
+
+class ConcreteObserverComputadora(Observer):
+    def __init__(self, name):
+        self._name = name
+        self._temperature: int = None
+
+    def update(self, subject: ConcreteSubject) -> None:#Recibe y guarda la temperatura
+        self._temperature = subject.getTemperature()
+        self.notify()
+
+    def notify(self):
+        print(self._name + " dice: la temperatura cambió a: " +
+              str(self._temperature) + "°C")
+        if (self._temperature > 26):
+            print("La temperatura se sobrepasa")
+        elif (self._temperature > 15):
+            print("Buena temperatura!")
+        else:
+            print("¿No hace un poco de frío?")
+
+
+class ConcreteObserverLCDDIsplay(Observer): #Muestra la nueva temperatura
+    def __init__(self, name):
+        self._name = name
+        self._temperature: int = None
+
+    def update(self, subject: ConcreteSubject) -> None:#Recibe y guarda la temperatura
+        self._temperature = subject.getTemperature()
+        self.notify()
+
+    def notify(self):
+        print(self._name + ":" + str(self._temperature) + "°C")
+        print("\n")
+
+
+if __name__ == "__main__":
+
+    Subject = ConcreteSubject()
+
+    Computadora = ConcreteObserverComputadora("Computadora")
+    desktopDisplay = ConcreteObserverLCDDIsplay("Pantalla")
+
+    Subject.registerObserver(Computadora)
+    Subject.registerObserver(desktopDisplay)
+
+    Subject.temperatureChanged()
+    Subject.temperatureChanged() #simular cambios de temperatura
+
+    Subject.removeObserver(desktopDisplay)
+
+    Subject.temperatureChanged()
